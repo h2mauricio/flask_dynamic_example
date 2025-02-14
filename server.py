@@ -121,3 +121,55 @@ def name_search():
 
 
 #Dynamic URL
+@app.route("/count")
+def count():
+    try:
+        # Get the 'data' list from the global scope
+        global data
+        return {"count": len(data)}, 200
+    except NameError:
+        # Return a JSON response with a 500 Internal Server Error status code if 'data' is not defined
+        return {"message": "Data not found"}, 500
+    
+@app.route("/person/<uuid>", methods=["GET"])
+def fund_by_uuid(uuid):
+    print(uuid)
+    for person in data:
+        if person["id"] == uuid:
+            return person
+    # If no match is found, return a JSON response with a 404 Not Found status code
+    return {"message": f"Person {uuid} not found"}, 404
+
+
+@app.route("/person/<uuid>", methods=["DELETE"])
+def delete_by_uuid(uuid):
+    global data
+    for i, person in enumerate(data):
+        if person["id"] == uuid:
+            del data[i]
+            return {"message": f"Person {uuid} deleted"}, 200
+    # If no match is found, return a JSON response with a 404 Not Found status code
+    return {"message": f"Person {uuid} not found"}, 404
+
+
+@app.route("/person", methods=["POST"])
+def add_by_uuid():
+    global data
+    # Get the JSON data from the request
+    new_person = request.get_json()
+    
+    if not new_person:
+        # Return a JSON response with a 400 Bad Request status code if no JSON data is provided
+        return {"message": "Invalid input, No JSON data provided"}, 400
+        
+    else:
+        # Add the new person to the 'data' list
+        data.append(new_person)
+    # Return a JSON response with a 201 Created status code
+    return {"message": f"Person {new_person['id']} added"}, 201
+
+
+#Error Handling
+@app.errorhandler(404)
+def api_not_found(e):
+    return {"message": "Resource not found"}, 404
